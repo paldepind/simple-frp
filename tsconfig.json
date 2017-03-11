@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "outDir": "dist",
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "lib": ["dom", "es5", "es2015.core", "es2015.iterable"]
+  },
+  "files": [
+    "frpjs.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
