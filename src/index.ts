@@ -4,7 +4,7 @@ export type Behavior<A> = (t: Time) => A;
 
 export type Occurence<A> = {time: Time, value: A};
 
-export type Events<A> = Occurence<A>[];
+export type Stream<A> = Occurence<A>[];
 
 export const timeB: Behavior<Time> = (t) => t;
 
@@ -23,19 +23,16 @@ export function lift<A>(f: (...args: any[]) => A, ...behaviors: Behavior<any>[])
   return (t) => f(...behaviors.map((b) => b(t)));
 }
 
-function findOccurence<V>(t: Time, e: Events<V>): Occurence<V> | undefined {
+function findOccurence<V>(t: Time, e: Stream<V>): Occurence<V> | undefined {
   return e.filter(({time}) => time < t).reverse()[0];
 }
 
-export function map<A, B>(f: (a: A) => B, e: Events<A>): Events<B> {
-  return e.map(({time, value}) => ({time, value: f(value)}));
+export function map<A, B>(f: (a: A) => B, stream: Stream<A>): Stream<B> {
+  return stream.map(({time, value}) => ({time, value: f(value)}));
 }
 
-export function switcher<V>(b: Behavior<V>, e: Events<Behavior<V>>): Behavior<V> {
-  return (t) => {
-    const maybeOcc = findOccurence(t, e);
-    return maybeOcc !== undefined ? maybeOcc.value(t) : b(t);
-  };
+export function filter<A>(predicate: (a: A) => boolean, stream: Stream<A>): Stream<A> {
+  return stream.filter(({value}) => predicate(value));
 }
 
 export function delay<A>(delta: Time, b: Behavior<A>): Behavior<A> {
@@ -48,4 +45,11 @@ export function timeTransform<V>(b: Behavior<V>, tb: Behavior<Time>): Behavior<V
 
 export function slower<V>(n: number, b: Behavior<V>): Behavior<V> {
   return timeTransform(b, lift1(t => t / n, timeB));
+}
+
+export function switcher<V>(b: Behavior<V>, e: Stream<Behavior<V>>): Behavior<V> {
+  return (t) => {
+    const maybeOcc = findOccurence(t, e);
+    return maybeOcc !== undefined ? maybeOcc.value(t) : b(t);
+  };
 }

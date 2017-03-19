@@ -85,7 +85,7 @@ export function display({animation, element}: DisplaySpec): void {
   let lastFrame = performance.now();
   function mainLoop(msT: Time): void {
     const delta = msT - lastFrame;
-    time += delta / 1000; // convert time so seconds
+    time += delta / 1000; // convert time to seconds
     lastFrame = msT;
     ctx.clearRect(0, 0, canvasHeight, canvasHeight);
     render(ctx, canvasWidth, canvasHeight, animation(world)(time));
