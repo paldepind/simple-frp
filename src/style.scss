@@ -2,10 +2,21 @@ canvas {
   display: block;
 }
 
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+}
+
 // Slider
 
-$line-height: 6px;
+$slider-height: 6px;
 $slider-color: #aa7777;
+$thumb-size: 16px;
 
 button {
   border: none;
@@ -16,35 +27,39 @@ button {
 }
 .animation {
   border: 1px solid #dcdcdc;
-  margin: 1em;
+  margin: 1em 0;
+  @extend .noselect;
 }
 .slider {
   position: relative;
+  height: $slider-height;
   display: flex;
   align-items: center;
   width: 100%;
   cursor: pointer;
+  background-color: #cccccc;
   .slider-line {
-    background-color: #cccccc;
-    height: $line-height;
+    position: absolute;
+    height: $slider-height;
     width: 100%;
   }
   .slider-progress {
     background-color: $slider-color;
-    height: $line-height;
+    height: $slider-height;
     position: absolute;
     width: 40%;
   }
   .slider-thumb {
     position: absolute;
     background-color: $slider-color;
-    background-image: radial-gradient(circle at 60% 40%, lighten($slider-color, 12%) 10%, $slider-color 95%);
+    background-image:
+      radial-gradient(circle at 60% 40%, lighten($slider-color, 12%) 10%, $slider-color 90%);
     left: 0;
     cursor: pointer;
     display: inline-block;
-    width: 16px;
-    height: 16px;
-    // border: 2px solid #444;
+    width: $thumb-size;
+    height: $thumb-size;
+    margin-left: -($thumb-size / 2);
     border-radius: 9px;
   }
 }
