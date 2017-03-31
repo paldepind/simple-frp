@@ -2,9 +2,9 @@ export type Time = number;
 
 export type Behavior<A> = (t: Time) => A;
 
-export type Occurence<A> = {time: Time, value: A};
+export type Occurrence<A> = {time: Time, value: A};
 
-export type Stream<A> = Occurence<A>[];
+export type Stream<A> = Occurrence<A>[];
 
 export const timeB: Behavior<Time> = (t) => t;
 
@@ -23,7 +23,7 @@ export function lift<A>(f: (...args: any[]) => A, ...behaviors: Behavior<any>[])
   return (t) => f(...behaviors.map((b) => b(t)));
 }
 
-function findOccurence<V>(t: Time, e: Stream<V>): Occurence<V> | undefined {
+function findOccurence<V>(t: Time, e: Stream<V>): Occurrence<V> | undefined {
   return e.filter(({time}) => time < t).reverse()[0];
 }
 
