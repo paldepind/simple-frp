@@ -78,7 +78,7 @@ export function display({animation, element}: DisplaySpec): void {
   canvas.addEventListener("click", (ev) => {
     world.clicks.push({
       time: performance.now() / 1000,
-      value: { x: ev.offsetX - (canvasWidth / 2), y: (canvasWidth / 2) - ev.offsetY }
+      value: { x: ev.offsetX - (canvasWidth / 2), y: (canvasHeight / 2) - ev.offsetY }
     });
   });
 
