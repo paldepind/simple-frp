@@ -29,15 +29,23 @@ button {
   border: 1px solid #dcdcdc;
   margin: 1em 0;
   @extend .noselect;
+  position: relative;
+}
+.control-buttons {
+  position: absolute;
+  bottom: 0;
+  margin-bottom: $slider-height;
 }
 .slider {
-  position: relative;
+  position: absolute;
+  bottom: 0;
   height: $slider-height;
   display: flex;
   align-items: center;
   width: 100%;
+  overflow: hidden;
   cursor: pointer;
-  background-color: #cccccc;
+  background-color: rgba(140, 139, 139, .7);
   .slider-line {
     position: absolute;
     height: $slider-height;

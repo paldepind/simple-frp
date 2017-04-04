@@ -4,7 +4,7 @@ import {
   Behavior, changes, empty, integrate, keepWhen, Now, sample, scan, scanS,
   snapshot, snapshotWith, split, stepper, Stream, switcher, Time, timeFrom, toggle
 } from "hareactive";
-import {combine, fgo, go, lift, map, take} from "jabz";
+import { combine, fgo, go, lift, map, take } from "jabz";
 import { Component, modelView, element, runComponentNow, elements, Child, streamDescription } from "@funkia/funnel";
 const { div, button, a } = elements;
 
@@ -108,11 +108,36 @@ type ToView = {
 function findMousemove(evs: (Position & { time: Time })[]): (t: Time) => Position {
   return (time: Time) => {
     let idx = evs.length - 1;
-    while (evs[idx].time > time) {
+    while (idx >= 0 && evs[idx].time > time) {
       idx--;
     }
-    return evs[idx];
+    const before = idx !== -1 ? evs[idx] : { time: 0, x: 0, y: 0 };
+    const last = evs[idx + 1];
+    if (last !== undefined) {
+      // Linear interpolation
+      const factor = (time - before.time) / (last.time - before.time);
+      return {
+        x: before.x + (last.x - before.x) * factor,
+        y: before.y + (last.y - before.y) * factor
+      };
+    } else {
+      return before;
+    }
   };
+}
+
+function prepend<A>(elm: A, elms: A[]): A[] {
+  return elms.concat([elm]);
+}
+
+/**
+ * Samples the behavior in the current moment and whenever the stream has an
+ * occurrence.
+ * @param behavior A behavior of a behavior to sample.
+ * @param stream A stream whose occurrences will trigger a sample.
+ */
+function sampleOn<A>(behavior: Behavior<Behavior<A>>, stream: Stream<any>): Now<Behavior<A>> {
+  return sample(behavior).chain((b) => sample(switcher(b, snapshot(behavior, stream))));
 }
 
 const model = (animation: Animation, duration: number) => fgo(function* model({
@@ -126,20 +151,20 @@ const model = (animation: Animation, duration: number) => fgo(function* model({
     (from, int) => int.map((n) => n + from), integrate(speed), jumpToTime
   );
   const timeB: Behavior<number> = yield sample(switcher(initialTimeB, playFromBS));
-  const clickOccurrenceS = snapshotWith(
+  const clickOccurrences = snapshotWith(
     (click, time) => ({
       time, value: { x: click.offsetX - (canvasWidth / 2), y: (canvasHeight / 2) - click.offsetY }
     }), timeB, clickS);
-  const worldClicksB: Behavior<lib.Stream<Position>> = yield sample(scan(
-    (click, clicks) => clicks.concat([click]), [], clickOccurrenceS
-  ));
+  const worldClicksB: Behavior<lib.Stream<Position>> = yield sampleOn(scan(
+    prepend, [], clickOccurrences
+  ), replayS);
   const moveOccurrence = snapshotWith(
     (move, time) => ({
       time, x: move.offsetX - (canvasWidth / 2), y: (canvasHeight / 2) - move.offsetY
     }), timeB, keepWhen(canvasMousemove, playing));
-  const worldMousemoves: Behavior<Position[]> = yield sample(scan(
+  const worldMousemoves: Behavior<Position[]> = yield sampleOn(scan(
     (move, moves) => moves.concat([move]), [{ time: 0, x: 0, y: 0 }], moveOccurrence
-  ));
+  ), replayS);
   const worldMouse = worldMousemoves.map(findMousemove);
   const positionB = timeB.map((t) => t / duration);
   const worldB = lift((clicks, mouse) => ({ clicks, mouse }), worldClicksB, worldMouse);
@@ -157,10 +182,12 @@ const view = ({ playing, imageB, positionB }: ToView) => div({
       setters: { render: imageB },
       output: { clickS: "click", canvasMousemove: "mousemove" }
     }),
-    button({
-      output: { playPauseS: "click" }
-    }, icon(playing.map((b) => b ? "pause" : "play_arrow"))),
-    button({ output: { replayS: "click" } }, icon("replay")),
+    div({ class: "control-buttons" }, [
+      button({
+        output: { playPauseS: "click" }
+      }, icon(playing.map((b) => b ? "pause" : "play_arrow"))),
+      button({ output: { replayS: "click" } }, icon("replay")),
+    ]),
     slider({ position: positionB })
   ]);
 
