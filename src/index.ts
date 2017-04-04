@@ -23,7 +23,7 @@ export function lift<A>(f: (...args: any[]) => A, ...behaviors: Behavior<any>[])
   return (t) => f(...behaviors.map((b) => b(t)));
 }
 
-function findOccurence<V>(t: Time, e: Stream<V>): Occurrence<V> | undefined {
+function findOccurrence<V>(t: Time, e: Stream<V>): Occurrence<V> | undefined {
   return e.filter(({time}) => time < t).reverse()[0];
 }
 
@@ -49,7 +49,11 @@ export function slower<V>(n: number, b: Behavior<V>): Behavior<V> {
 
 export function switcher<V>(b: Behavior<V>, e: Stream<Behavior<V>>): Behavior<V> {
   return (t) => {
-    const maybeOcc = findOccurence(t, e);
+    const maybeOcc = findOccurrence(t, e);
     return maybeOcc !== undefined ? maybeOcc.value(t) : b(t);
   };
+}
+
+export function scan<A, B>(fn: (a: A, b: B) => B, init: B, source: Stream<A>): Behavior<B> {
+  return (t: Time) => source.reduce((acc, {time, value}) => time < t ? fn(value, acc) : acc, init);
 }

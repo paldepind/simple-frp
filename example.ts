@@ -1,6 +1,6 @@
 import "./src/style.scss";
 import {
-  Behavior, delay, Stream, constB, lift, map, slower, switcher, Time, timeB
+  Behavior, delay, Stream, constB, lift, map, slower, switcher, Time, timeB, scan
 } from "./src";
 import {
   Circle, Image, circle, stack, translate
@@ -33,8 +33,15 @@ function animation3(w: World): Behavior<Image> {
   );
 }
 
+// function animation4(w: World): Behavior<Image> {
+//   return lift(({x, y}) => circle(20, x, y), w.mouse);
+// }
+
 function animation4(w: World): Behavior<Image> {
-  return lift(({x, y}) => circle(20, x, y), w.mouse);
+  const mouseCircle = lift(({x, y}) => circle(20, x, y), w.mouse);
+  return lift(
+    stack, mouseCircle, delay(.5, mouseCircle), slower(2, mouseCircle)
+  );
 }
 
 function notanimation4(w: World): Behavior<Image> {
@@ -43,7 +50,7 @@ function notanimation4(w: World): Behavior<Image> {
 
   const movingSquare = lift((x, y) => circle(20, x, y), sinTime, cosTime);
 
-  const slowerMovingSquare = slower(2, movingSquare);
+  const slowerMovingSquare = slower(15, movingSquare);
   return lift(stack,
     switcher(movingSquare, map(({ x, y }) => constB(circle(25, x, y)), w.clicks)),
     delay(400, movingSquare),
@@ -51,12 +58,17 @@ function notanimation4(w: World): Behavior<Image> {
   );
 }
 
-function orbit(t: Time, image: Image): Image {
+function orbit(radius: number, t: Time, image: Image): Image {
   return translate(100 * Math.sin(t), 100 * Math.cos(t), image);
 }
 
+function animation5(w: World): Behavior<Image> {
+  const size = scan((_, s) => s + 3, 110, w.clicks);
+  return lift((s) => circle(s, 0, 0), size);
+}
+
 function notanimation5(w: World): Behavior<Image> {
-  const planet = lift(orbit, timeB, constB(circle(10, 0, 0)));
+  const planet = lift(orbit, constB(100), timeB, constB(circle(10, 0, 0)));
   const circles = lift(stack, planet, slower(2, planet));
 
   return lift(stack,
@@ -93,3 +105,10 @@ display({
   element: document.getElementById("animation4"),
   duration: 12
 });
+
+display({
+  animation: animation5,
+  element: document.getElementById("animation5"),
+  duration: 12
+});
+
